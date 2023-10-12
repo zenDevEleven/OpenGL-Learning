@@ -28,9 +28,9 @@ int main(int agrc, char **agrv)
 	}
 
 	float vertices[] = { // Vertices Coordenates (X, Y) normalized = from -1.0 to 1.0
-		0, 0.5f,
-		0.5, -0.5,
-		-0.5, -0.5f
+		0, 0.5f, 1.0f, 0.0f, 0.0f,
+		0.5, -0.5, 0.0f, 1.0f, 0.0f,
+		-0.5, -0.5f, 0.0f, 0.0f, 1.0f
 	};
 
 	//Generate 1 buffer for triangle (if we want more that 1 buffer we need to assign a vector to the pointer reference)
@@ -46,15 +46,18 @@ int main(int agrc, char **agrv)
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
 
 	const char* vertexShaderSource = R"glsl(
 		#version 330 core
+
 		in vec2 position;
+		in vec3 color;
+		out vec3 Color;
+
 		void main()
 		{
-			gl_Position = vec4(position, 0.0, 1.0);
+			Color = color;
+			gl_Position = vec4(position, 0.0f, 1.0f);
 		}
 	)glsl";
 
@@ -74,11 +77,13 @@ int main(int agrc, char **agrv)
 
 	const char* fragmentShaderSource = R"glsl(
 		#version 330 core
-		out vec4 outColor;
+
+		in vec3 Color;
+		out vec4 outColor;	
 
 		void main()
 		{
-			outColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
+			outColor = vec4(Color, 1.0f);
 		}
 	)glsl";
 	
@@ -90,7 +95,7 @@ int main(int agrc, char **agrv)
 	if (!success)
 	{
 		glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+		std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
 	}
 
 	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
@@ -108,11 +113,22 @@ int main(int agrc, char **agrv)
 		std::cout << "ERROR::SHADER::PROGRAM::COMPILATION_FAILED\n" << infoLog << std::endl;
 	}
 
+	//Attrib the colors to the position of each vertex
+	GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
+	glEnableVertexAttribArray(posAttrib);
+	glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
+
+	GLint colorAttrib = glGetAttribLocation(shaderProgram, "color");
+	glEnableVertexAttribArray(colorAttrib);
+	glVertexAttribPointer(colorAttrib, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(2 * sizeof(float)));
+
 	glUseProgram(shaderProgram);
 
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
 
+	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+		
 	SDL_Event windowEvent;
 	while (true)
 	{
@@ -121,7 +137,7 @@ int main(int agrc, char **agrv)
 			if (windowEvent.type == SDL_QUIT) break;
 		}
 
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		glUseProgram(shaderProgram);
