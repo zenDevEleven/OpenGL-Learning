@@ -27,11 +27,22 @@ int main(int agrc, char **agrv)
 		return -2;
 	}
 
-	float vertices[] = { // Vertices Coordenates (X, Y) normalized = from -1.0 to 1.0
-		0, 0.5f, 1.0f, 0.0f, 0.0f,
-		0.5, -0.5, 0.0f, 1.0f, 0.0f,
-		-0.5, -0.5f, 0.0f, 0.0f, 1.0f
+	float vertices[] = {
+		0.5f,  0.5f, // top right
+		0.5f, -0.5f, // bottom right
+	   -0.5f, -0.5f, // bottom left
+	   -0.5f,  0.5f  // top left
 	};
+
+	unsigned int indices[] = {  // note that we start from 0!
+		0, 1, 3,   // first triangle
+		1, 2, 3    // second triangle
+	};
+
+	GLuint ebo;
+	glGenBuffers(1, &ebo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 	//Generate 1 buffer for triangle (if we want more that 1 buffer we need to assign a vector to the pointer reference)
 	GLuint vbo;
@@ -142,7 +153,10 @@ int main(int agrc, char **agrv)
 
 		glUseProgram(shaderProgram);
 		glBindVertexArray(vao);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		//glDrawArrays(GL_TRIANGLES, 0, 3);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
 
 		SDL_GL_SwapWindow(window);
 	}
