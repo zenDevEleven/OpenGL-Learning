@@ -28,47 +28,65 @@ int main(int agrc, char **agrv)
 	}
 
 	float vertices[] = {
-		0.5f,  0.5f, // top right
-		0.5f, -0.5f, // bottom right
-	   -0.5f, -0.5f, // bottom left
-	   -0.5f,  0.5f  // top left
+		0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // top right FRONT 0 
+		0.5f,  0.75f, -0.5, 1.0f, 0.0f, 0.0f, // top right BACK 1 
+		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom right Front 2
+		0.5f, -0.25f, -0.5f,0.0f, 1.0f, 0.0f, // bottom right Back 3 
+	   -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f,// bottom left Front 4
+	   -0.5f, -0.25f, -0.5f,0.0f, 0.0f, 1.0f,// bottom left Back 5
+	   -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f,// top left Front 6
+	   -0.5f,  0.75f, -0.5f,1.0f, 1.0f, 0.0f,// top left Back 7
 	};
 
 	unsigned int indices[] = {  // note that we start from 0!
-		0, 1, 3,   // first triangle
-		1, 2, 3    // second triangle
+		0, 2, 6,   // first triangle
+		2, 4, 6,    // second triangle
+
+		0, 1, 2,    // third triangle
+		2, 1, 3,    // fourd triangle
+
+		6, 7, 4,    // fifth triangle
+		4, 7, 5,    // six triangle
+
+		1, 3, 7,   // first triangle
+		3, 5, 7,   // second triangle
+
+		0, 1, 7,   // first triangle
+		7, 0, 1,    // second triangle
+
+		4, 5, 3,   // first triangle
+		3, 2, 2    // second triangle
 	};
 
 	GLuint ebo;
 	glGenBuffers(1, &ebo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 	//Generate 1 buffer for triangle (if we want more that 1 buffer we need to assign a vector to the pointer reference)
 	GLuint vbo;
 	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
 	GLuint vao;
 	glGenVertexArrays(1, &vao);
+
 	glBindVertexArray(vao);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 	const char* vertexShaderSource = R"glsl(
 		#version 330 core
 
-		in vec2 position;
+		in vec3 position;
 		in vec3 color;
 		out vec3 Color;
 
 		void main()
 		{
 			Color = color;
-			gl_Position = vec4(position, 0.0f, 1.0f);
+			gl_Position = vec4(position, 1.0f);
 		}
 	)glsl";
 
@@ -127,11 +145,11 @@ int main(int agrc, char **agrv)
 	//Attrib the colors to the position of each vertex
 	GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
 	glEnableVertexAttribArray(posAttrib);
-	glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
+	glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), 0);
 
 	GLint colorAttrib = glGetAttribLocation(shaderProgram, "color");
 	glEnableVertexAttribArray(colorAttrib);
-	glVertexAttribPointer(colorAttrib, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(2 * sizeof(float)));
+	glVertexAttribPointer(colorAttrib, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
 
 	glUseProgram(shaderProgram);
 
@@ -139,7 +157,10 @@ int main(int agrc, char **agrv)
 	glDeleteShader(fragmentShader);
 
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		
+	
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+
 	SDL_Event windowEvent;
 	while (true)
 	{
@@ -154,8 +175,9 @@ int main(int agrc, char **agrv)
 		glUseProgram(shaderProgram);
 		glBindVertexArray(vao);
 		//glDrawArrays(GL_TRIANGLES, 0, 3);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
 
 		SDL_GL_SwapWindow(window);
