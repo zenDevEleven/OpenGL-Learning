@@ -246,13 +246,7 @@ int main(int agrc, char **agrv)
 	glUniform1i(textureLocation, 0);
 	glUniform1i(textureLocation, 1);
 
-	glm::mat4 trans(1.0f);
-	trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	trans = glm::scale(trans, glm::vec3(0.5f, 0.5f, 0.5f));
-
-	GLuint transformLoc = glGetUniformLocation(shaderProgram, "transform");
-	glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
-
+	int start = SDL_GetTicks();
 
 	glClearColor(0.2f, 0.5f, 0.3f, 1.0f);
 
@@ -265,6 +259,22 @@ int main(int agrc, char **agrv)
 		{
 			if (windowEvent.type == SDL_QUIT) break;
 		}
+
+		//rotate over time
+		int now = SDL_GetTicks();
+		float time = (now - start) / 1000.0f;
+
+		std::cout << "Time: " << time << std::endl;
+
+		float scaleFactor = sin(time);
+
+		glm::mat4 trans(1.0f);
+		trans = glm::translate(trans, glm::vec3(scaleFactor, scaleFactor, scaleFactor));
+		trans = glm::rotate(trans, time, glm::vec3(0.0f, 0.0f, 1.0f));
+		trans = glm::scale(trans, glm::vec3(scaleFactor, scaleFactor, scaleFactor));
+
+		GLuint transformLoc = glGetUniformLocation(shaderProgram, "transform");
+		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
 
 		glClear(GL_COLOR_BUFFER_BIT);
 
